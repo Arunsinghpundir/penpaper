@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smooth Pen Tool with Eraser</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: radial-gradient(circle, #111, #333);
+      }
+
+      canvas {
+        display: block;
+      }
+
+      .controls {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .controls button {
+        padding: 10px;
+        border: none;
+        background: #555;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        border-radius: 5px;
+      }
+
+      .controls button:hover {
+        background: #777;
+      }
+
+      .color-display {
+        margin-left: 10px;
+        font-size: 16px;
+        color: #fff;
+      }
+
+      .controls i {
+        font-size: 20px;
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="controls">
+      <button id="eraser">
+        <i>🧹</i> Eraser
+      </button>
+      <button id="colorChange">
+        <i>🎨</i> Change Color
+      </button>
+      <span class="color-display">Color: #faacac</span>
+    </div>
+    <canvas></canvas>
+    <script>
+      const canvas = document.querySelector("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Set canvas size
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // Default tool settings
+      let isDrawing = false;
+      let isErasing = false;
+      let currentColor = "#faacac";
+
+      // Update color display
+      const updateColorDisplay = () => {
+        document.querySelector(".color-display").textContent = `Color: ${currentColor}`;
+      };
+
+      // Handle resizing of the window
+      window.addEventListener("resize", () => {
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext("2d");
+
+        // Copy the existing drawing
+        tempCtx.drawImage(canvas, 0, 0);
+
+        // Resize canvas
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Draw back the previous content
+        ctx.drawImage(tempCanvas, 0, 0);
+      });
+
+      // Start drawing
+      const startDrawing = (x, y) => {
+        isDrawing = true;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      };
+
+      // Draw lines
+      const draw = (x, y) => {
+        if (!isDrawing) return;
+
+        if (isErasing) {
+          ctx.clearRect(x - 10, y - 10, 20, 20);
+        } else {
+          ctx.strokeStyle = currentColor;
+          ctx.lineWidth = 3;
+          ctx.lineCap = "round";
+          ctx.lineTo(x, y);
+          ctx.stroke();
+        }
+      };
+
+      // Stop drawing
+      const stopDrawing = () => {
+        isDrawing = false;
+        ctx.closePath();
+      };
+
+      // Mouse events
+      canvas.addEventListener("mousedown", (e) => startDrawing(e.clientX, e.clientY));
+      canvas.addEventListener("mousemove", (e) => draw(e.clientX, e.clientY));
+      canvas.addEventListener("mouseup", stopDrawing);
+      canvas.addEventListener("mouseleave", stopDrawing);
+
+      // Touch events
+      canvas.addEventListener("touchstart", (e) => {
+        const touch = e.touches[0];
+        startDrawing(touch.clientX, touch.clientY);
+      });
+      canvas.addEventListener("touchmove", (e) => {
+        const touch = e.touches[0];
+        draw(touch.clientX, touch.clientY);
+      });
+      canvas.addEventListener("touchend", stopDrawing);
+      canvas.addEventListener("touchcancel", stopDrawing);
+
+      // Eraser button
+      document.getElementById("eraser").addEventListener("click", () => {
+        isErasing = !isErasing;
+        const eraserBtn = document.getElementById("eraser");
+        eraserBtn.textContent = isErasing ? "Stop Erasing" : "🧹 Eraser";
+      });
+
+      // Color change button
+      document.getElementById("colorChange").addEventListener("click", () => {
+        currentColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+        isErasing = false; // Disable eraser when changing color
+          const eraserBtn = document.getElementById("eraser");
+        eraserBtn.textContent = isErasing ? "Stop Erasing" : "🧹 Eraser";
+        updateColorDisplay(); // Update displayed color
+      });
+
+      // Initial color display
+      updateColorDisplay();
+    </script>
+  </body>
+</html>
